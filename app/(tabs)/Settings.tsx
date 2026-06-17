@@ -13,8 +13,6 @@ export default function Settings() {
       console.log("Logout error:", error.message);
       return;
     }
-
-    router.replace("../login");
   };
   const settingsOptions = [
     {
@@ -122,7 +120,7 @@ export default function Settings() {
         </View>
 
         {/* Logout */}
-        <Pressable   onPress={handleLogout} className="w-full mt-8 p-4 bg-red-600/20 border border-red-500/30 rounded-xl flex-row justify-center items-center gap-2">
+        <Pressable onPress={handleLogout} className="w-full mt-8 p-4 bg-red-600/20 border border-red-500/30 rounded-xl flex-row justify-center items-center gap-2">
           <LogOut size={20} color="#ef4444" />
           <Text className="text-red-500 font-medium">
             Log Out

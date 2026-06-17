@@ -1,28 +1,24 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-"import './styles/index.css';"
-import "../global.css"
-import { useUser } from "../services/auth"
+import { useFonts } from "expo-font";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { View } from "react-native";
+import "react-native-reanimated";
 
-
-import { useColorScheme } from '@/components/useColorScheme';
-
-
-export {
-  ErrorBoundary,
-} from 'expo-router';
+import "../global.css";
+import { useUser } from "../services/auth";
+import { useColorScheme } from "@/components/useColorScheme";
+import { useRouter, useSegments } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  initialRouteName: "(tabs)",
 };
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   useEffect(() => {
@@ -30,14 +26,10 @@ export default function RootLayout() {
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
+    if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded) return null;
 
   return <RootLayoutNav />;
 }
@@ -45,31 +37,42 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { user, loading } = useUser();
-  const router = require("expo-router").useRouter();
-  const segments = require("expo-router").useSegments();
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    if (loading) return;
+  if (loading) return;
 
-    const inAuthGroup = segments[0] === "(auth)" || segments[0] === "Login";
+  const path = segments.join("/");
 
-    if (!user && !inAuthGroup) {
-      router.replace("/Login");
-    }
+  const isLogin = path === "Login";
 
-    if (user && inAuthGroup) {
-      router.replace("/(tabs)/Feed");
-    }
-  }, [user, loading]);
+  if (!user && !isLogin) {
+    router.replace("/Login");
+  }
+
+  if (user && isLogin) {
+    router.replace("/(tabs)/Feed");
+  }
+  }, [user, loading, segments]);
+
+  if (loading || user === undefined) {
+  return (
+      <View style={{ flex: 1, backgroundColor: "#0a0a0a" }} />
+    );
+  }
+
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="Login" options={{ headerShown: false }} />
-        <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="ProfileSetup" options={{ headerShown: false }} />
-        <Stack.Screen name="BandDetail" options={{ title: 'Band' }} />
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#0a0a0a" },
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="BandDetail" options={{ headerShown: true, title: "Band" }} />
       </Stack>
     </ThemeProvider>
   );
