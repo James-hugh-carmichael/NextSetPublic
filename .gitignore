@@ -31,13 +31,18 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Environment Secrets (Crucial addition)
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
 
 # typescript
 *.tsbuildinfo
 
-# generated native folders
+# generated native folders & IDE config
 /ios
 /android
-/_vscode
+.vscode/
+_vscode/
