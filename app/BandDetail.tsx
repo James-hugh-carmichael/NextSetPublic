@@ -66,7 +66,7 @@ export default function BandDetail() {
     bandDetails[id as keyof typeof bandDetails] || bandDetails["1"];
 
   return (
-    <ScrollView className="flex-1 bg-[#0a0a0a]">
+    <ScrollView className="flex-1 bg-[#0a0a0a]" showsVerticalScrollIndicator={false}>
       {/* Header image */}
       <View className="relative h-64">
         <Image

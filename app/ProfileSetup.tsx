@@ -69,7 +69,7 @@ export default function ProfileSetup() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0a0a0a]">
+    <ScrollView className="flex-1 bg-[#0a0a0a]" showsVerticalScrollIndicator={false}>
       <View className="pt-16 pb-8 px-6">
         <Text className="text-3xl font-bold text-white mb-2">
           Create Your Profile

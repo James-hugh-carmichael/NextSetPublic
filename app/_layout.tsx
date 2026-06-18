@@ -72,7 +72,7 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="BandDetail" options={{ headerShown: true, title: "Band" }} />
+        <Stack.Screen name="BandDetail"/>
       </Stack>
     </ThemeProvider>
   );
