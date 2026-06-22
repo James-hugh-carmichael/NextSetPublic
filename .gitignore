@@ -19,9 +19,6 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# UI components used for web
-components/
-
 # debug
 npm-debug.*
 yarn-debug.*
