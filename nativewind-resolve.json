@@ -1,0 +1,11 @@
+﻿{
+  "version": "1.0.0",
+  "name": "nextsetexpo",
+  "dependencies": {
+    "nativewind": {
+      "version": "4.2.5",
+      "resolved": "https://registry.npmjs.org/nativewind/-/nativewind-4.2.5.tgz",
+      "overridden": false
+    }
+  }
+}
