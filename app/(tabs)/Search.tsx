@@ -7,6 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { X } from "lucide-react-native";
+import Slider from "@react-native-community/slider";
+
 
 const genreOptions = [
   "Rock",
@@ -19,6 +21,7 @@ const genreOptions = [
   "Hip Hop",
   "Folk",
   "Country",
+  "Post-hardcore",
 ];
 
 const commitmentOptions = [
@@ -30,7 +33,8 @@ const commitmentOptions = [
 
 const roleOptions = [
   "Vocalist",
-  "Guitar",
+  "Lead Guitar",
+  "Rhythm Guitar",
   "Bass",
   "Drums",
   "Keys",
@@ -41,9 +45,10 @@ const roleOptions = [
 
 export default function Search() {
   const [genres, setGenres] = useState<string[]>([]);
-  const [commitment, setCommitment] = useState("");
+  const [commitment, setCommitment] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
+  const [age, setAge] = useState(16);
 
   const toggleGenre = (genre: string) => {
     setGenres((prev) =>
@@ -62,11 +67,12 @@ export default function Search() {
   };
 
   const clearFilters = () => {
-    setGenres([]);
-    setCommitment("");
-    setLocation("");
-    setRoles([]);
-  };
+  setGenres([]);
+  setCommitment([]);
+  setLocation("");
+  setRoles([]);
+  setAge(16);
+};
 
   const activeFilters =
     genres.length +
@@ -177,20 +183,72 @@ export default function Search() {
           </View>
         </View>
 
-        {/* Commitment */}
+      {/* Commitment */}
+      <View>
+        <Text className="text-sm font-medium text-gray-300 mb-3">
+          Commitment Level
+        </Text>
+
+        <View className="flex-row flex-wrap gap-2">
+          {commitmentOptions.map((option) => (
+            <Pressable
+              key={option}
+              onPress={() =>
+                setCommitment((prev) =>
+                  prev.includes(option)
+                    ? prev.filter((c) => c !== option)
+                    : [...prev, option]
+                )
+              }
+              className={`px-4 py-2 rounded-full ${
+                commitment.includes(option)
+                  ? "bg-purple-600"
+                  : "bg-[#1a1a1a]"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium ${
+                  commitment.includes(option)
+                    ? "text-white"
+                    : "text-gray-400"
+                }`}
+              >
+                {option}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+      
+        {/* Age */}
         <View>
           <Text className="text-sm font-medium text-gray-300 mb-3">
-            Commitment Level
+            Maximum Band Age: {age}
           </Text>
 
-          <View className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl">
-            <TextInput
-              value={commitment}
-              onChangeText={setCommitment}
-              placeholder="Any commitment level"
-              placeholderTextColor="#6b7280"
-              className="px-4 py-3 text-white"
+          <View className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3">
+
+            <Slider
+              minimumValue={16}
+              maximumValue={80}
+              step={1}
+              value={age}
+              onValueChange={setAge}
+              minimumTrackTintColor="#9333ea"
+              maximumTrackTintColor="#374151"
+              thumbTintColor="#a855f7"
             />
+
+            <View className="flex-row justify-between">
+              <Text className="text-gray-500 text-xs">
+                16
+              </Text>
+
+              <Text className="text-gray-500 text-xs">
+                80+
+              </Text>
+            </View>
+
           </View>
         </View>
 
