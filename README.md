@@ -37,8 +37,10 @@ npm install
 
 # Start the development server
 npm start
+```
 
-Future plans
-Real-time gig applications and messaging
-Media upload and swipe mechanism
-Artist matching recommendations
+
+## Future plans
+- Real-time gig applications and messaging
+- Media upload and swipe mechanism
+- Artist matching recommendations
