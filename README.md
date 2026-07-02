@@ -1,37 +1,46 @@
 # NextSet
 
-NextSet is a full-stack platform that helps musicians discover bands and find live gig opportunities in grassroots venues.
+**Connecting musicians with bands and grassroots gigs**: A full-stack platform built to solve fragmented discovery in local music scenes.
 
-## What it does
+## What is NextSet?
 
-- Helps musicians discover new bands
-- Connects artists with live gig opportunities
-- Focuses on grassroots / local music scenes
+NextSet helps independent musicians and bands discover each other and find local gig opportunities, moving beyond groupchats and word-of-mouth.
+
+## Key Features
+
+- **User & Band Profiles** – Custom profiles for musicians and bands
+- **Gig Feed** – Browse and discover local opportunities (pre-populated data)
+- **Authentication** – Secure sign up / login for users and bands
+- **Responsive Design** – Built mobile-first with React Native & Expo
 
 ## Tech Stack
 
-- React Native (Expo)
-- TypeScript
-- Supabase (Auth + Database)
+- **Frontend**: React Native + Expo + TypeScript
+- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **Database**: PostgreSQL schema for users, bands, gigs, and profiles
 
+## Current Progress (Summer 2026)
 
-## Features
-
-- User authentication (sign up / login)
-- Band and musician profiles
-- Feed of gigs and opportunities (currently prebaked)
-
+- Full Supabase backend with database schema and authentication implemented
+- Mobile app frontend in active development
+- Storage buckets configured for band photos and gig media
+- Responsive UI components and navigation system
 
 ## Getting Started
-
-### 1. Clone the repo
 
 ```bash
 git clone https://github.com/James-hugh-carmichael/NextSetPublic.git
 cd NextSetPublic
-```
-### 2. Install dependencies
+
+# Install dependencies
 npm install
 
-### 3. Start the app
+# Start the development server
 npm start
+```
+
+
+## Future plans
+- Real-time gig applications and messaging
+- Media upload and swipe mechanism
+- Artist matching recommendations
