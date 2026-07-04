@@ -28,7 +28,7 @@ NextSet helps independent musicians and bands discover each other and find local
 
 ## Screenshots 
 <img width="250" height="400" alt="image" src="https://github.com/user-attachments/assets/af91b863-1b0d-4213-b80b-22718204d4aa" />
-<img width="250" height="400" alt="image" src="https://github.com/user-attachments/assets/550c18c3-bfd8-4f1b-94e8-e466c8955865" />
+<img width="250" height="400" alt="image" src="https://github.com/user-attachments/assets/3a7db1a5-e4d8-43fc-b717-eed16b549b38" />
 <img width="250" height="400" alt="image" src="https://github.com/user-attachments/assets/3b55c4be-ff16-453f-bf83-12adab059d35" />
 
 
