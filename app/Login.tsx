@@ -91,11 +91,11 @@ export default function Login() {
           </View>
 
           <Text className="text-4xl font-bold text-white mb-2">
-            BandMatch
+            NextSet
           </Text>
 
           <Text className="text-gray-400 text-center">
-            Find your perfect musical connection
+            Your genre, your band, your next set.
           </Text>
         </View>
 
