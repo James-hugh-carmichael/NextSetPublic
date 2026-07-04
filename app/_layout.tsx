@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import "react-native-reanimated";
 
@@ -8,6 +8,7 @@ import "../global.css";
 import { useUser } from "../services/auth";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useRouter, useSegments } from "expo-router";
+import { supabase } from "../lib/supabase";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -25,28 +26,62 @@ function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
 
+  const [checkingProfile, setCheckingProfile] = useState(false);
+  const hasCheckedOnce = useRef(false);
+
   useEffect(() => {
-  if (loading) return;
+    const run = async () => {
+      if (loading) return;
 
-  const path = segments.join("/");
+      const segmentsArr = segments as string[];
+      const isLogin = segmentsArr.includes("Login");
+      const isMusicianSetup = segmentsArr.includes("Musiciansetup");
 
-  const isLogin = path === "Login";
+      if (!user) {
+        hasCheckedOnce.current = false;
+        if (!isLogin) router.replace("/Login");
+        return;
+      }
 
-  if (!user && !isLogin) {
-    router.replace("/Login");
-  }
+      if (!hasCheckedOnce.current) setCheckingProfile(true);
 
-  if (user && isLogin) {
-    router.replace("/(tabs)/Feed");
-  }
+      const { data: profile } = await supabase
+        .from("Musicians")
+        .select("onboarding_complete")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      hasCheckedOnce.current = true;
+      setCheckingProfile(false);
+
+      if (!profile) {
+        await supabase
+          .from("Musicians")
+          .upsert(
+            { id: user.id, onboarding_complete: false },
+            { onConflict: "id" }
+          );
+
+        if (!isMusicianSetup) router.replace("/Musiciansetup");
+        return;
+      }
+
+      if (!profile.onboarding_complete) {
+        if (!isMusicianSetup) router.replace("/Musiciansetup");
+        return;
+      }
+
+      if (isLogin || segmentsArr.length === 0) {
+        router.replace("/(tabs)/Feed");
+      }
+    };
+
+    run();
   }, [user, loading, segments]);
 
-  if (loading || user === undefined) {
-  return (
-      <View style={{ flex: 1, backgroundColor: "#0a0a0a" }} />
-    );
+  if (loading || checkingProfile || user === undefined) {
+    return <View style={{ flex: 1, backgroundColor: "#0a0a0a" }} />;
   }
-
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -57,7 +92,8 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="BandDetail"/>
+        <Stack.Screen name="BandDetail" />
+        <Stack.Screen name="Musiciansetup" />
       </Stack>
     </ThemeProvider>
   );
