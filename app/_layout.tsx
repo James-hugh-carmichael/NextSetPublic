@@ -71,9 +71,9 @@ function RootLayoutNav() {
         return;
       }
 
-      if (isLogin || segmentsArr.length === 0) {
-        router.replace("/(tabs)/Feed");
-      }
+      if (isLogin) {
+      router.replace("/(tabs)/Feed");
+    }
     };
 
     run();

@@ -174,21 +174,46 @@ export default function ProfileSetup() {
       return;
     }
 
+    let profilePhotoPath: string | null = null;
+
+    if (profilePic) {
+      const response = await fetch(profilePic);
+      const blob = await response.blob();
+
+      const extension = profilePic.split(".").pop() || "jpg";
+      const filePath = `${user.id}/profile.${extension}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, blob, {
+          contentType: blob.type,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        setSubmitting(false);
+        setErrorMsg(uploadError.message);
+        return;
+      }
+
+      profilePhotoPath = data.path;
+    }
+    
     const dobString = dob ? toInputDateString(dob) : null;
 
     const { error } = await supabase
-      .from("Musicians")
-      .upsert({
-        id: user.id,
-        name: name.trim(),
-        bio: bio.trim(),
-        genres: genres.join(", "),
-        experience_level: experience,
-        commitment_level: commitment,
-        Age: dobString,
-        onboarding_complete: true,
-      })
-      .eq("id", user.id);
+    .from("Musicians")
+    .upsert({
+      id: user.id,
+      name: name.trim(),
+      bio: bio.trim(),
+      genres: genres.join(", "),
+      experience_level: experience,
+      commitment_level: commitment,
+      Age: dobString,
+      onboarding_complete: true,
+      avatar_url: profilePhotoPath,
+    });
 
     if (error) {
       setSubmitting(false);
