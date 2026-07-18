@@ -115,6 +115,11 @@ export default function Profile() {
 
   const age = profile.Age ? calculateAge(profile.Age) : null;
   const locationText = formatLocation(profile.Location);
+  const avatarUrl = profile.avatar_url
+  ? supabase.storage
+      .from("avatars")
+      .getPublicUrl(profile.avatar_url).data.publicUrl
+  : null;
 
   return (
     <ScrollView className="flex-1 bg-[#0a0a0a]" showsVerticalScrollIndicator={false}>
@@ -134,7 +139,7 @@ export default function Profile() {
           <Image
             source={{
               uri:
-                profile.avatar_url ||
+                avatarUrl ||
                 "https://images.unsplash.com/photo-1618674782816-1c1c777bd2c1?auto=format&fit=crop&w=600",
             }}
             className="w-32 h-32 rounded-2xl border-4 border-[#0a0a0a] bg-[#1a1a1a]"
