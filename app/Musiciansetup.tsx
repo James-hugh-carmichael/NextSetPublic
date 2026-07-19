@@ -16,6 +16,31 @@ import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../lib/supabase";
 import { PrimaryButton } from "../components";
 
+/**
+ * Profile setup screen for creating a musician profile.
+ *
+ * Collects and stores the user's:
+ * - Personal information
+ * - Date of birth and age
+ * - Location (no real geography function yet)
+ * - Profile image
+ * - Music genres
+ * - Experience level
+ * - Commitment preferences
+ * - Bio
+ * - Performance media
+ *
+ * Handles:
+ * - Form validation
+ * - Profile image uploads to Supabase Storage
+ * - Creating/updating musician records in Supabase
+ * - Platform-specific date selection for web and mobile
+ * - Navigation to the main feed after successful setup
+ *
+ * Completes the onboarding process by marking the user's profile as
+ * complete once all required information has been saved.
+ */
+
 export default function ProfileSetup() {
   const router = useRouter();
 

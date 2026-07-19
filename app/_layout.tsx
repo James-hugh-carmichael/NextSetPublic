@@ -10,6 +10,20 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { useRouter, useSegments } from "expo-router";
 import { supabase } from "../lib/supabase";
 
+/**
+ * Root layout component for the application.
+ *
+ * Provides the main navigation structure and application-level providers.
+ *
+ * Handles:
+ * - Initial route configuration
+ * - Authentication-based navigation
+ * - Theme management
+ * - Global stack navigation setup
+ *
+ * Delegates authentication and onboarding checks to the navigation wrapper.
+ */
+
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };

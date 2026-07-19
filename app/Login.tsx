@@ -3,6 +3,21 @@ import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-nativ
 import { Music2, MailCheck } from "lucide-react-native";
 import { signIn, signUp } from "../services/auth";
 
+/**
+ * Login screen handling user authentication and account creation.
+ *
+ * Provides users with:
+ * - Email and password authentication
+ * - Account registration
+ * - Email confirmation handling after signup
+ * - Some authentication error feedback
+ *
+ * Uses Supabase authentication.
+ *
+ * Displays a confirmation prompt when email verification is required before
+ * completing account setup.
+ */
+
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
