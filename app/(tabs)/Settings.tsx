@@ -2,6 +2,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { ChevronRight, Bell, Lock, HelpCircle, LogOut } from "lucide-react-native";
 import { signOut } from "../../services/auth";
 import { useRouter } from "expo-router";
+import { SecondaryButton } from "../../components";
 
 
 export default function Settings() {
@@ -120,12 +121,10 @@ export default function Settings() {
         </View>
 
         {/* Logout */}
-        <Pressable onPress={handleLogout} className="w-full mt-8 p-4 bg-red-600/20 border border-red-500/30 rounded-xl flex-row justify-center items-center gap-2">
+        <SecondaryButton onPress={handleLogout} className="w-full mt-8">
           <LogOut size={20} color="#ef4444" />
-          <Text className="text-red-500 font-medium">
-            Log Out
-          </Text>
-        </Pressable>
+          <Text className="ml-2">Log Out</Text>
+        </SecondaryButton>
       </View>
     </ScrollView>
   );

@@ -39,7 +39,7 @@ export default function ProfileSwitcherSheet({
         >
           <View className="w-10 h-1 bg-[#3a3a3a] rounded-full self-center mb-4" />
 
-          # musician profile 
+          {/* musician profile */}
           <Pressable
             onPress={onSelectMusician}
             className="flex-row items-center py-3"
@@ -60,7 +60,7 @@ export default function ProfileSwitcherSheet({
           </Pressable>
 
 
-          # band profile user has
+          {/* band profile user has */}
           {bands.map((band) => (
             <Pressable
               key={band.id}
@@ -84,7 +84,7 @@ export default function ProfileSwitcherSheet({
 
           <View className="h-[1px] bg-[#2a2a2a] my-2" />
 
-          # create a new band
+          {/* create a new band */}
           <Pressable
             onPress={onCreateBand}
             className="flex-row items-center py-3"
@@ -96,7 +96,7 @@ export default function ProfileSwitcherSheet({
               Create a Band
             </Text>
           </Pressable>
-          
+
         </Pressable>
       </Pressable>
     </Modal>

@@ -4,16 +4,17 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   Image,
   ActivityIndicator,
   Platform,
+  Pressable,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Upload, Calendar } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../lib/supabase";
+import { PrimaryButton } from "../components";
 
 export default function ProfileSetup() {
   const router = useRouter();
@@ -426,18 +427,13 @@ export default function ProfileSetup() {
           )}
         </View>
 
-        <Pressable
+        <PrimaryButton
           onPress={handleSubmit}
+          loading={submitting}
           disabled={submitting}
-          className={`bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-2xl flex-row items-center justify-center gap-2 ${
-            submitting ? "opacity-60" : ""
-          }`}
         >
-          {submitting && <ActivityIndicator color="white" />}
-          <Text className="text-white text-center font-bold">
-            {submitting ? "Saving..." : "Complete Profile"}
-          </Text>
-        </Pressable>
+          {submitting ? "Saving..." : "Complete Profile"}
+        </PrimaryButton>
       </View>
     </ScrollView>
   );
