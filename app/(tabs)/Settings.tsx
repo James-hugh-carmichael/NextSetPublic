@@ -4,6 +4,19 @@ import { signOut } from "../../services/auth";
 import { useRouter } from "expo-router";
 import { SecondaryButton } from "../../components";
 
+/**
+ * Settings screen for managing account preferences and application options.
+ *
+ * Will Provide users with access to:
+ * - Notification preferences
+ * - Privacy and security settings
+ * - Help and support resources
+ * - Account information
+ * - Legal information
+ *
+ * Current progress:
+ * - Uses the authentication service to securely sign users out of their account.
+ */
 
 export default function Settings() {
   const router = useRouter();

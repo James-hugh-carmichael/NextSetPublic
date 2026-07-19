@@ -9,6 +9,19 @@ import { X } from "lucide-react-native";
 import Slider from "@react-native-community/slider";
 import { useFilterStore, useActiveFilterCount } from "../../store/userFilters";
 
+/**
+ * Search screen for filtering available bands.
+ *
+ * Provides users with filtering controls to discover bands based on:
+ * - Location
+ * - Music genres
+ * - Required roles/instruments
+ * - Commitment level
+ * - Maximum age requirements
+ *
+ * Uses the global filter store to persist selected filters
+ */
+
 const genreOptions = [
   "Rock", "Jazz", "Classical", "Metal", "Pop", "Blues",
   "Electronic", "Hip Hop", "Folk", "Country", "Posthardcore",
