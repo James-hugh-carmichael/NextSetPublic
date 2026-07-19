@@ -5,6 +5,17 @@ import { supabase } from "../../lib/supabase";
 import { Filter, MapPin, Users } from "lucide-react-native";
 import { useFilterStore, useActiveFilterCount } from "../../store/userFilters";
 
+
+ /**
+  * Feed screen displaying available bands looking for musicians.
+  *
+  * Fetches open band posts from Supabase and presents them as interactive
+  * cards containing band information, location, genre, commitment level,
+  * and required roles.
+  *
+  * Supports filtering - Uses the global filter state to filter the displayed posts based on user-selected criteria.
+  */
+
 type BandPost = {
   id: string;
   title: string;

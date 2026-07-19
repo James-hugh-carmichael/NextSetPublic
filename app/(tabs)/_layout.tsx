@@ -2,7 +2,17 @@ import { SymbolView } from 'expo-symbols';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from '@/components/useColorScheme';
 import "../../global.css"
- 
+
+ /**
+ * TabLayout component
+ *
+ * Tabs included:
+ * - Feed: Displays the main content feed.
+ * - Search: Allows users to discover content and users.
+ * - Messages: Provides access to user conversations.
+ * - Profile: Displays the current user's profile.
+ * - Settings: Provides application and account settings.
+*/
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

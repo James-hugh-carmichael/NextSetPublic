@@ -9,6 +9,11 @@ import {
 } from "react-native";
 import { Search } from "lucide-react-native";
 
+/**
+ * Messages screen displaying user conversations with bands.
+ * currently uses mock data for demonstration purposes.
+ */
+
 const conversations = [
   {
     id: 1,

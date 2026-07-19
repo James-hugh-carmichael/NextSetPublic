@@ -14,6 +14,24 @@ import { supabase } from "../../lib/supabase";
 import { useMyBands, type MyBand } from "../../hooks/useMyBands";
 import ProfileSwitcherSheet from "../../components/Profileswitchersheet";
 
+/**
+ * Profile screen displaying the authenticated musician's profile.
+ *
+ * Fetches profile data from Supabase and displays:
+ * - Profile image and personal information
+ * - Age and location
+ * - Experience and commitment statistics
+ * - Musical genres
+ * - Performance videos
+ * - Associated bands
+ *
+ * Provides functionality for:
+ * - Editing musician profile details
+ * - Switching between musician and band profiles
+ * - Creating a new band profile
+ * - Navigating to application settings
+ */
+
 type MusicianProfile = {
   id: string;
   name: string | null;
