@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+
 import { supabase } from "../lib/supabase";
-import { useState, useEffect } from "react";
 
 export const useUser = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +25,11 @@ export const useUser = () => {
   return { user, loading };
 };
 
-
-export const signUp = (email, password) => {
+export const signUp = (email: string, password: string) => {
   return supabase.auth.signUp({ email, password });
 };
 
-export const signIn = (email, password) => {
+export const signIn = (email: string, password: string) => {
   return supabase.auth.signInWithPassword({ email, password });
 };
 
