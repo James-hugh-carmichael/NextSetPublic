@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import {
   Alert,
   Image,
@@ -9,18 +10,20 @@ import {
   Text,
   TextInput,
   View,
+  Platform,
 } from "react-native";
 import { Camera, Upload, X } from "lucide-react-native";
-
 import { useUser } from "../services/auth";
+import { MUSIC_GENRES, normalizeGenre } from "../lib/music";
 import { uploadProfileMedia } from "../services/media";
 import {
   parseStoredList,
+  parseStoredVideos,
+  ProfileVideo,
   saveMusicianProfile,
   useMusician,
 } from "../services/musicians";
 
-const genreOptions = ["Rock", "Jazz", "Classical", "Metal", "Pop", "Blues", "Electronic", "Hip Hop"];
 const roleOptions = [
   "Lead Vocals",
   "Backing Vocals",
@@ -67,10 +70,11 @@ export default function ProfileSetup() {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
+  const [genreQuery, setGenreQuery] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
   const [experience, setExperience] = useState("");
   const [commitment, setCommitment] = useState("");
-  const [videos, setVideos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<ProfileVideo[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,7 +90,7 @@ export default function ProfileSetup() {
     setRoles(parseStoredList(musician.roles));
     setExperience(musician.experience_level ?? "");
     setCommitment(musician.commitment_level ?? "");
-    setVideos(parseStoredList(musician.videos));
+    setVideos(parseStoredVideos(musician.videos));
     setAvatarUrl(musician.avatar_url);
   }, [musician]);
 
@@ -142,7 +146,33 @@ export default function ProfileSetup() {
     setUploading(true);
     try {
       const videoUrl = await uploadProfileMedia(user.id, result.assets[0], "video");
-      setVideos((currentVideos) => [...currentVideos, videoUrl]);
+      let thumbnailUrl: string | null = null;
+
+      if (Platform.OS !== "web") {
+        try {
+          const thumbnail = await VideoThumbnails.getThumbnailAsync(result.assets[0].uri, {
+            time: 1000,
+            quality: 0.6,
+          });
+          thumbnailUrl = await uploadProfileMedia(
+            user.id,
+            {
+              uri: thumbnail.uri,
+              fileName: `video-thumbnail-${Date.now()}.jpg`,
+              mimeType: "image/jpeg",
+            },
+            "video-thumbnail"
+          );
+        } catch (thumbnailError) {
+          const message =
+            thumbnailError instanceof Error
+              ? thumbnailError.message
+              : "The video uploaded, but its thumbnail could not be generated.";
+          Alert.alert("Thumbnail unavailable", message);
+        }
+      }
+
+      setVideos((currentVideos) => [...currentVideos, { url: videoUrl, thumbnailUrl }]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "The video could not be uploaded.";
       Alert.alert("Unable to upload video", message);
@@ -158,6 +188,12 @@ export default function ProfileSetup() {
         : [...currentGenres, genre]
     );
   };
+
+  const matchingGenres = MUSIC_GENRES.filter(
+    (genre) =>
+      !genres.includes(genre) &&
+      normalizeGenre(genre).includes(normalizeGenre(genreQuery))
+  );
 
   const toggleRole = (role: string) => {
     setRoles((currentRoles) =>
@@ -237,10 +273,24 @@ export default function ProfileSetup() {
         <TextInput value={bio} onChangeText={setBio} multiline textAlignVertical="top" placeholder="Tell bands about yourself..." placeholderTextColor="#6b7280" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white h-32 mb-6" />
 
         <Text className="text-sm font-medium text-gray-300 mb-3">Music Genres</Text>
+        {genres.length > 0 && (
+          <View className="mb-3">
+            <Text className="text-xs font-medium text-purple-400 mb-2">Selected genres</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {genres.map((genre) => (
+                <Pressable key={genre} onPress={() => toggleGenre(genre)} className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-purple-600">
+                  <Text className="text-white">{genre}</Text>
+                  <X size={14} color="white" />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+        <TextInput value={genreQuery} onChangeText={setGenreQuery} placeholder="Search genres" placeholderTextColor="#6b7280" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white mb-3" />
         <View className="flex-row flex-wrap gap-2 mb-6">
-          {genreOptions.map((genre) => (
-            <Pressable key={genre} onPress={() => toggleGenre(genre)} className={`px-4 py-2 rounded-full ${genres.includes(genre) ? "bg-purple-600" : "bg-[#1a1a1a]"}`}>
-              <Text className={genres.includes(genre) ? "text-white" : "text-gray-400"}>{genre}</Text>
+          {matchingGenres.map((genre) => (
+            <Pressable key={genre} onPress={() => toggleGenre(genre)} className="px-4 py-2 rounded-full bg-[#1a1a1a]">
+              <Text className="text-gray-400">{genre}</Text>
             </Pressable>
           ))}
         </View>
@@ -283,9 +333,9 @@ export default function ProfileSetup() {
         <Text className="text-sm font-medium text-gray-300 mb-2">Performance Videos</Text>
         <Text className="text-xs text-gray-500 mb-3">Upload up to three videos, each no longer than three minutes.</Text>
         {videos.map((video, index) => (
-          <View key={video} className="flex-row items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 mb-2">
+          <View key={video.url} className="flex-row items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-3 mb-2">
             <Text className="flex-1 text-gray-300 text-sm">Performance video {index + 1}</Text>
-            <Pressable onPress={() => setVideos((currentVideos) => currentVideos.filter((item) => item !== video))}>
+            <Pressable onPress={() => setVideos((currentVideos) => currentVideos.filter((item) => item.url !== video.url))}>
               <X size={18} color="#ef4444" />
             </Pressable>
           </View>

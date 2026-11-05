@@ -1,14 +1,71 @@
-import { Image, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Award, Clock, Music, Settings } from "lucide-react-native";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { Award, Clock, Music, Settings, X } from "lucide-react-native";
 
 import { useUser } from "../../services/auth";
-import { parseStoredList, useMusician } from "../../services/musicians";
+import {
+  parseStoredList,
+  parseStoredVideos,
+  ProfileVideo as StoredProfileVideo,
+  useMusician,
+} from "../../services/musicians";
+
+type VideoGalleryItemProps = {
+  video: StoredProfileVideo;
+  index: number;
+  onPress: () => void;
+};
+
+function VideoGalleryItem({ video, index, onPress }: VideoGalleryItemProps) {
+  return (
+    <Pressable onPress={onPress} className="w-[31%] aspect-[9/16] rounded-xl overflow-hidden bg-[#1a1a1a]">
+      {video.thumbnailUrl ? (
+        <Image source={{ uri: video.thumbnailUrl }} className="w-full h-full" />
+      ) : (
+        <View className="w-full h-full bg-[#1a1a1a] items-center justify-center">
+          <Text className="text-gray-500 text-xs text-center px-2">Performance video {index + 1}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+function FullscreenVideo({
+  source,
+  onClose,
+}: {
+  source: string;
+  onClose: () => void;
+}) {
+  const player = useVideoPlayer(source, (videoPlayer) => {
+    videoPlayer.loop = false;
+    videoPlayer.play();
+  });
+
+  return (
+    <Modal visible animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      <View className="flex-1 bg-black">
+        <VideoView
+          player={player}
+          nativeControls
+          contentFit="contain"
+          style={{ flex: 1 }}
+        />
+        <Pressable onPress={onClose} className="absolute top-12 right-5 p-3 rounded-full bg-black/60">
+          <X size={24} color="white" />
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
 
 export default function Profile() {
   const router = useRouter();
   const { user } = useUser();
   const { musician, loading, error } = useMusician(user?.id);
+  const [activeVideo, setActiveVideo] = useState<StoredProfileVideo | null>(null);
 
   if (loading) {
     return <View className="flex-1 bg-[#0a0a0a]" />;
@@ -24,7 +81,7 @@ export default function Profile() {
 
   const genres = parseStoredList(musician.genres);
   const roles = parseStoredList(musician.roles);
-  const videos = parseStoredList(musician.videos);
+  const videos = parseStoredVideos(musician.videos);
   const initial = musician.name?.trim().charAt(0).toUpperCase() || "?";
 
   return (
@@ -105,14 +162,18 @@ export default function Profile() {
           {videos.length === 0 ? (
             <Text className="text-gray-400">No performance videos added yet.</Text>
           ) : (
-            videos.map((video) => (
-              <Pressable key={video} onPress={() => Linking.openURL(video)} className="p-4 bg-[#1a1a1a] rounded-xl mb-2">
-                <Text className="text-purple-400" numberOfLines={1}>{video}</Text>
-              </Pressable>
-            ))
+            <View className="flex-row flex-wrap gap-3">
+              {videos.map((video, index) => (
+                <VideoGalleryItem key={video.url} video={video} index={index} onPress={() => setActiveVideo(video)} />
+              ))}
+            </View>
           )}
         </View>
       </View>
+
+      {activeVideo && (
+        <FullscreenVideo source={activeVideo.url} onClose={() => setActiveVideo(null)} />
+      )}
     </ScrollView>
   );
 }

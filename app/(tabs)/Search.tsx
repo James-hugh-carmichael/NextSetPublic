@@ -4,14 +4,15 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { X } from "lucide-react-native";
 
 import { BandPost, getOpenBandPosts, parseRoles } from "../../services/bandPosts";
+import { genresMatch, MUSIC_GENRES, normalizeGenre } from "../../lib/music";
 
-const genreOptions = ["Rock", "Jazz", "Classical", "Metal", "Pop", "Blues", "Electronic", "Hip Hop", "Folk", "Country"];
 const commitmentOptions = ["Casual", "Part-time", "Full-time", "Professional"];
 
 export default function Search() {
   const router = useRouter();
   const [posts, setPosts] = useState<BandPost[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
+  const [genreQuery, setGenreQuery] = useState("");
   const [commitment, setCommitment] = useState("");
   const [location, setLocation] = useState("");
   const [role, setRole] = useState("");
@@ -40,17 +41,21 @@ export default function Search() {
 
     return posts.filter((post) => {
       const band = post.band;
-      const genresMatch = genres.length === 0 || (band?.genre && genres.includes(band.genre));
+      const bandGenre = band?.genre;
+      const genreMatches =
+        genres.length === 0 ||
+        (bandGenre ? genres.some((genre) => genresMatch(genre, bandGenre)) : false);
       const commitmentMatch = !commitment || post.commitment_level === commitment;
       const locationMatch = !locationQuery || band?.location?.toLowerCase().includes(locationQuery);
       const roleMatch = !roleQuery || parseRoles(post.roles_needed).some((item) => item.toLowerCase().includes(roleQuery));
 
-      return genresMatch && commitmentMatch && locationMatch && roleMatch;
+      return genreMatches && commitmentMatch && locationMatch && roleMatch;
     });
   }, [posts, genres, commitment, location, role]);
 
   const clearFilters = () => {
     setGenres([]);
+    setGenreQuery("");
     setCommitment("");
     setLocation("");
     setRole("");
@@ -78,13 +83,35 @@ export default function Search() {
         <TextInput value={location} onChangeText={setLocation} placeholder="City or ZIP code" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-6" />
 
         <Text className="text-sm font-medium text-gray-300 mb-3">Music Genres</Text>
-        <View className="flex-row flex-wrap gap-2 mb-6">
-          {genreOptions.map((genre) => (
-            <Pressable key={genre} onPress={() => setGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : [...current, genre])} className={`px-4 py-2 rounded-full ${genres.includes(genre) ? "bg-purple-600" : "bg-[#1a1a1a]"}`}>
-              <Text className={genres.includes(genre) ? "text-white" : "text-gray-400"}>{genre}</Text>
-            </Pressable>
-          ))}
-        </View>
+        {genres.length > 0 && (
+          <View className="mb-3">
+            <Text className="text-xs font-medium text-purple-400 mb-2">Selected genres</Text>
+            <View className="flex-row flex-wrap gap-2">
+              {genres.map((genre) => (
+                <Pressable key={genre} onPress={() => setGenres((current) => current.filter((item) => item !== genre))} className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-purple-600">
+                  <Text className="text-white">{genre}</Text>
+                  <X size={14} color="white" />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+        <TextInput value={genreQuery} onChangeText={setGenreQuery} placeholder="Search genres, e.g. Post-Hardcore" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-3" />
+        {genreQuery.trim() && (
+          <View className="flex-row flex-wrap gap-2 mb-6">
+            {MUSIC_GENRES
+              .filter(
+                (genre) =>
+                  !genres.includes(genre) &&
+                  normalizeGenre(genre).includes(normalizeGenre(genreQuery))
+              )
+              .map((genre) => (
+                <Pressable key={genre} onPress={() => setGenres((current) => [...current, genre])} className="px-4 py-2 rounded-full bg-[#1a1a1a]">
+                  <Text className="text-gray-400">{genre}</Text>
+                </Pressable>
+              ))}
+          </View>
+        )}
 
         <Text className="text-sm font-medium text-gray-300 mb-3">Role needed</Text>
         <TextInput value={role} onChangeText={setRole} placeholder="e.g. Drummer" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-6" />

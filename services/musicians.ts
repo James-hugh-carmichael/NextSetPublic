@@ -15,6 +15,11 @@ export type Musician = {
   onboarding_complete: boolean | null;
 };
 
+export type ProfileVideo = {
+  url: string;
+  thumbnailUrl: string | null;
+};
+
 export type MusicianProfileInput = {
   name: string;
   bio: string;
@@ -22,7 +27,7 @@ export type MusicianProfileInput = {
   roles: string[];
   experienceLevel: string;
   commitmentLevel: string;
-  videos: string[];
+  videos: ProfileVideo[];
   avatarUrl: string | null;
 };
 
@@ -44,6 +49,38 @@ export function parseStoredList(value: string | null) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+export function parseStoredVideos(value: string | null): ProfileVideo[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed.flatMap((item) => {
+        if (typeof item === "string") {
+          return [{ url: item, thumbnailUrl: null }];
+        }
+
+        if (
+          item &&
+          typeof item === "object" &&
+          typeof item.url === "string" &&
+          (typeof item.thumbnailUrl === "string" || item.thumbnailUrl === null)
+        ) {
+          return [item as ProfileVideo];
+        }
+
+        return [];
+      });
+    }
+  } catch {
+    // Older rows may use comma-separated text.
+  }
+
+  return parseStoredList(value).map((url) => ({ url, thumbnailUrl: null }));
 }
 
 export function useMusician(userId?: string) {

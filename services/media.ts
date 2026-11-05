@@ -3,23 +3,25 @@ import type { ImagePickerAsset } from "expo-image-picker";
 
 import { supabase } from "../lib/supabase";
 
-type MediaKind = "avatar" | "video";
+type MediaKind = "avatar" | "video" | "video-thumbnail";
+type UploadAsset = Pick<ImagePickerAsset, "uri" | "fileName" | "mimeType">;
 
-function getExtension(asset: ImagePickerAsset, kind: MediaKind) {
+function getExtension(asset: UploadAsset, kind: MediaKind) {
   const fileExtension = asset.fileName?.split(".").pop()?.toLowerCase();
   if (fileExtension && /^[a-z0-9]+$/.test(fileExtension)) {
     return fileExtension;
   }
 
-  return kind === "avatar" ? "jpg" : "mp4";
+  return kind === "video" ? "mp4" : "jpg";
 }
 
 export async function uploadProfileMedia(
   userId: string,
-  asset: ImagePickerAsset,
+  asset: UploadAsset,
   kind: MediaKind
 ) {
-  const bucket = kind === "avatar" ? "avatars" : "videos";
+  const bucket =
+    kind === "avatar" ? "avatars" : kind === "video" ? "videos" : "gallery";
   const extension = getExtension(asset, kind);
   const objectPath = `${userId}/${kind}-${Date.now()}-${Math.random()
     .toString(36)
@@ -27,7 +29,7 @@ export async function uploadProfileMedia(
   const file = new File(asset.uri);
   const fileData = await file.arrayBuffer();
   const { error } = await supabase.storage.from(bucket).upload(objectPath, fileData, {
-    contentType: asset.mimeType ?? (kind === "avatar" ? "image/jpeg" : "video/mp4"),
+    contentType: asset.mimeType ?? (kind === "video" ? "video/mp4" : "image/jpeg"),
     upsert: false,
   });
 

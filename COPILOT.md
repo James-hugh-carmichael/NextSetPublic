@@ -102,9 +102,15 @@ A musician's application to a band post.
   Avoid adding new mock data as a feature implementation.
 - Preserve the existing schema's text storage for genres, musician roles, and videos
   until a deliberate, coordinated schema migration changes it.
+- Use `lib/music.ts` as the single source of truth for selectable music genres.
+  Store its canonical labels; use `genresMatch` when matching existing data so
+  formatting variants such as `Posthardcore` and `Post-Hardcore` still match.
 - Profile media uses the public `avatars` and `videos` buckets. Store only the
   resulting public URLs in `avatar_url` and `videos`; the mobile client must
   still have authenticated `storage.objects` insert policies for both buckets.
+- Profile-video thumbnails are generated at upload time and stored in the
+  public `gallery` bucket. New `videos` values are JSON objects with `url` and
+  `thumbnailUrl`; the app remains compatible with older URL-only entries.
 - Respect Supabase RLS policies. Do not embed service-role keys or bypass
   policies in the mobile client.
 - Treat `onboarding_complete` as the source of truth for whether an
