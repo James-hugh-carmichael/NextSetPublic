@@ -80,6 +80,20 @@ export async function getOpenBandPosts() {
   return ((data ?? []) as unknown as PostQueryResult[]).map(normalizePost);
 }
 
+export async function getBandPostsForBand(bandId: string) {
+  const { data, error } = await supabase
+    .from("bandPosts")
+    .select(postFields)
+    .eq("band_id", bandId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data ?? []) as unknown as PostQueryResult[]).map(normalizePost);
+}
+
 export async function getBandPost(postId: string) {
   const { data, error } = await supabase
     .from("bandPosts")

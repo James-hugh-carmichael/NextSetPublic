@@ -84,6 +84,11 @@ function RootLayoutNav() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="BandDetail"/>
+        <Stack.Screen name="Bands" />
+        <Stack.Screen name="JoinBand" />
+        <Stack.Screen name="BandPosts" />
+        <Stack.Screen name="BandSetup" />
+        <Stack.Screen name="BandMembers" />
       </Stack>
     </ThemeProvider>
   );
