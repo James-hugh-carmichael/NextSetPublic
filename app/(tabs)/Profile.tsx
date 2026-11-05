@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { Award, Clock, Music, Settings, X } from "lucide-react-native";
+import { Pencil, Settings, X } from "lucide-react-native";
 
 import { useUser } from "../../services/auth";
 import {
@@ -20,7 +20,7 @@ type VideoGalleryItemProps = {
 
 function VideoGalleryItem({ video, index, onPress }: VideoGalleryItemProps) {
   return (
-    <Pressable onPress={onPress} className="w-[31%] aspect-[9/16] rounded-xl overflow-hidden bg-[#1a1a1a]">
+    <Pressable onPress={onPress} className="w-40 h-64 mr-3 rounded-2xl overflow-hidden bg-[#1a1a1a]">
       {video.thumbnailUrl ? (
         <Image source={{ uri: video.thumbnailUrl }} className="w-full h-full" />
       ) : (
@@ -86,51 +86,66 @@ export default function Profile() {
 
   return (
     <ScrollView className="flex-1 bg-[#0a0a0a]" showsVerticalScrollIndicator={false}>
-      <View className="pt-16 pb-6 px-6 relative">
-        <Pressable onPress={() => router.push("/Settings")} className="absolute top-12 right-4 p-2 bg-black/50 rounded-full">
-          <Settings size={20} color="white" />
-        </Pressable>
+      <View className="h-[460px] relative bg-[#1a0a2e]">
         {musician.avatar_url ? (
-          <Image source={{ uri: musician.avatar_url }} className="w-28 h-28 rounded-2xl mb-5" />
+          <Image source={{ uri: musician.avatar_url }} className="w-full h-full" />
         ) : (
-          <View className="w-28 h-28 rounded-2xl bg-purple-600 items-center justify-center mb-5">
-            <Text className="text-5xl font-bold text-white">{initial}</Text>
+          <View className="w-full h-full bg-[#1a0a2e] items-center justify-center">
+            <Text className="text-8xl font-bold text-purple-300">{initial}</Text>
           </View>
         )}
-        <Text className="text-3xl font-bold text-white mb-2">{musician.name ?? "Musician"}</Text>
+        <View className="absolute inset-0 bg-black/35" />
+        <Pressable onPress={() => router.push("/ProfileSetup")} className="absolute top-12 left-5 p-3 bg-black/50 rounded-full">
+          <Pencil size={20} color="white" />
+        </Pressable>
+        <Pressable onPress={() => router.push("/Settings")} className="absolute top-12 right-5 p-3 bg-black/50 rounded-full">
+          <Settings size={20} color="white" />
+        </Pressable>
+        <View className="absolute bottom-0 left-0 right-0 px-6 py-6">
+          <Text className="text-4xl font-bold text-white mb-3">{musician.name ?? "Musician"}</Text>
+          <View className="flex-row flex-wrap gap-2">
+            <View className="px-3 py-1 bg-purple-600 rounded-full">
+              <Text className="text-white text-xs font-medium">
+                {musician.experience_level ?? "Experience not set"}
+              </Text>
+            </View>
+            <View className="px-3 py-1 bg-pink-600 rounded-full">
+              <Text className="text-white text-xs font-medium">
+                {musician.commitment_level ?? "Availability not set"}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
 
-      <View className="px-6 pb-8">
-        <Pressable onPress={() => router.push("/ProfileSetup")} className="w-full py-3 bg-purple-600 rounded-xl mb-6">
-          <Text className="text-white text-center font-medium">Edit Profile</Text>
-        </Pressable>
-
-        <View className="flex-row gap-3 mb-6">
-          <View className="flex-1 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]">
-            <Award size={20} color="#a855f7" />
-            <Text className="text-gray-500 text-xs mt-2">Experience</Text>
-            <Text className="text-white font-medium text-sm">{musician.experience_level ?? "Not set"}</Text>
+      <View className="px-6 py-7">
+        <View className="mb-6">
+          <View className="flex-row items-baseline justify-between mb-3">
+            <Text className="text-xl font-bold text-white">Performances</Text>
+            {videos.length > 0 && <Text className="text-purple-400 text-sm">{videos.length} videos</Text>}
           </View>
-          <View className="flex-1 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]">
-            <Clock size={20} color="#ec4899" />
-            <Text className="text-gray-500 text-xs mt-2">Commitment</Text>
-            <Text className="text-white font-medium text-sm">{musician.commitment_level ?? "Not set"}</Text>
-          </View>
-          <View className="flex-1 p-4 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a]">
-            <Music size={20} color="#3b82f6" />
-            <Text className="text-gray-500 text-xs mt-2">Genres</Text>
-            <Text className="text-white font-medium text-sm">{genres.length}</Text>
-          </View>
+          {videos.length === 0 ? (
+            <Pressable onPress={() => router.push("/ProfileSetup")} className="h-40 rounded-2xl border border-dashed border-[#3a3a3a] items-center justify-center">
+              <Text className="text-purple-400 font-medium">Add performance videos</Text>
+            </Pressable>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {videos.map((video, index) => (
+                <VideoGalleryItem key={video.url} video={video} index={index} onPress={() => setActiveVideo(video)} />
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {musician.bio && (
           <View className="mb-6">
-            <Text className="text-xl font-bold text-white mb-3">About</Text>
+            <Text className="text-xl font-bold text-white mb-2">About</Text>
             <Text className="text-gray-400 leading-relaxed">{musician.bio}</Text>
           </View>
         )}
         <View className="mb-6">
-          <Text className="text-xl font-bold text-white mb-3">Music Genres</Text>
+          <Text className="text-xl font-bold text-white mb-3">Music</Text>
+          <Text className="text-xs font-medium text-gray-500 uppercase mb-2">Genres</Text>
           {genres.length === 0 ? (
             <Text className="text-gray-400">No genres added yet.</Text>
           ) : (
@@ -142,9 +157,7 @@ export default function Profile() {
               ))}
             </View>
           )}
-        </View>
-        <View className="mb-6">
-          <Text className="text-xl font-bold text-white mb-3">Instruments & Roles</Text>
+          <Text className="text-xs font-medium text-gray-500 uppercase mt-5 mb-2">Instruments & Roles</Text>
           {roles.length === 0 ? (
             <Text className="text-gray-400">No instruments or roles added yet.</Text>
           ) : (
@@ -153,18 +166,6 @@ export default function Profile() {
                 <View key={role} className="px-4 py-2 bg-pink-600/20 border border-pink-500/30 rounded-full">
                   <Text className="text-pink-400 text-sm font-medium">{role}</Text>
                 </View>
-              ))}
-            </View>
-          )}
-        </View>
-        <View>
-          <Text className="text-xl font-bold text-white mb-3">Performance Videos</Text>
-          {videos.length === 0 ? (
-            <Text className="text-gray-400">No performance videos added yet.</Text>
-          ) : (
-            <View className="flex-row flex-wrap gap-3">
-              {videos.map((video, index) => (
-                <VideoGalleryItem key={video.url} video={video} index={index} onPress={() => setActiveVideo(video)} />
               ))}
             </View>
           )}
