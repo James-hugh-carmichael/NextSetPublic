@@ -7,6 +7,9 @@ export type Band = {
   location: string | null;
   description: string | null;
   image_url: string | null;
+  videos: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type BandPost = {
@@ -19,12 +22,15 @@ export type BandPost = {
   min_age: number | null;
   max_age: number | null;
   commitment_level: string | null;
+  location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string | null;
   band: Band | null;
 };
 
 const postFields =
-  "id, band_id, title, description, roles_needed, is_open, min_age, max_age, commitment_level, created_at, Bands(id, name, genre, location, description, image_url)";
+  "id, band_id, title, description, roles_needed, is_open, min_age, max_age, commitment_level, location, latitude, longitude, created_at, Bands(id, name, genre, location, description, image_url, videos, latitude, longitude)";
 
 type PostQueryResult = Omit<BandPost, "band"> & {
   Bands: Band[] | Band | null;
@@ -41,6 +47,9 @@ function normalizePost(post: PostQueryResult): BandPost {
     min_age: post.min_age,
     max_age: post.max_age,
     commitment_level: post.commitment_level,
+    location: post.location,
+    latitude: post.latitude,
+    longitude: post.longitude,
     created_at: post.created_at,
     band: Array.isArray(post.Bands) ? post.Bands[0] ?? null : post.Bands,
   };

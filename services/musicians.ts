@@ -12,6 +12,7 @@ export type Musician = {
   commitment_level: string | null;
   videos: string | null;
   avatar_url: string | null;
+  Age: string | null;
   onboarding_complete: boolean | null;
 };
 
@@ -29,7 +30,37 @@ export type MusicianProfileInput = {
   commitmentLevel: string;
   videos: ProfileVideo[];
   avatarUrl: string | null;
+  birthDate: string;
 };
+
+export function getAgeFromBirthDate(birthDate: string | null | undefined) {
+  if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    return null;
+  }
+
+  const date = new Date(`${birthDate}T00:00:00`);
+  const [year, month, day] = birthDate.split("-").map(Number);
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() + 1 !== month ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const birthdayHasPassed =
+    today.getMonth() > date.getMonth() ||
+    (today.getMonth() === date.getMonth() && today.getDate() >= date.getDate());
+
+  if (!birthdayHasPassed) {
+    age -= 1;
+  }
+
+  return age >= 0 && age <= 120 ? age : null;
+}
 
 export function parseStoredList(value: string | null) {
   if (!value) {
@@ -108,7 +139,7 @@ export function useMusician(userId?: string) {
     supabase
       .from("Musicians")
       .select(
-        "id, name, bio, genres, roles, experience_level, commitment_level, videos, avatar_url, onboarding_complete"
+        "id, name, bio, genres, roles, experience_level, commitment_level, videos, avatar_url, Age, onboarding_complete"
       )
       .eq("id", userId)
       .maybeSingle()
@@ -152,13 +183,14 @@ export async function saveMusicianProfile(
         commitment_level: profile.commitmentLevel,
         videos: JSON.stringify(profile.videos),
         avatar_url: profile.avatarUrl,
+        Age: profile.birthDate,
         onboarding_complete: true,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     )
     .select(
-      "id, name, bio, genres, roles, experience_level, commitment_level, videos, avatar_url, onboarding_complete"
+      "id, name, bio, genres, roles, experience_level, commitment_level, videos, avatar_url, Age, onboarding_complete"
     )
     .single();
 

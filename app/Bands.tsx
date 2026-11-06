@@ -15,7 +15,9 @@ import {
   BandMembership,
   createBand,
   getMyBandMemberships,
+  updateBandLocation,
 } from "../services/bands";
+import { getApproximateCurrentLocation } from "../services/location";
 import { useUser } from "../services/auth";
 import { MUSIC_GENRES, normalizeGenre } from "../lib/music";
 
@@ -31,8 +33,10 @@ export default function Bands() {
   const [genre, setGenre] = useState("");
   const [genreQuery, setGenreQuery] = useState("");
   const [location, setLocation] = useState("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const loadBands = useCallback(async () => {
     if (!user) {
@@ -87,11 +91,19 @@ export default function Bands() {
         location: location.trim(),
         description,
       });
+      if (coordinates) {
+        await updateBandLocation(bandId, {
+          area: location,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+        });
+      }
       await setActiveAccount({ type: "band", bandId });
       setName("");
       setGenre("");
       setGenreQuery("");
       setLocation("");
+      setCoordinates(null);
       setDescription("");
       setShowCreateForm(false);
       await loadBands();
@@ -102,6 +114,27 @@ export default function Bands() {
       Alert.alert("Unable to create band", message);
     } finally {
       setCreating(false);
+    }
+  };
+
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const currentLocation = await getApproximateCurrentLocation();
+      setLocation(currentLocation.area);
+      setCoordinates({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      });
+    } catch (locationError) {
+      Alert.alert(
+        "Unable to use location",
+        locationError instanceof Error
+          ? locationError.message
+          : "The band location could not be retrieved."
+      );
+    } finally {
+      setLocating(false);
     }
   };
 
@@ -223,6 +256,11 @@ export default function Bands() {
               </View>
             )}
             <TextInput value={location} onChangeText={setLocation} placeholder="City or area" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-3" />
+            <Pressable onPress={useCurrentLocation} disabled={locating} className="py-3 border border-[#2a2a2a] rounded-xl mb-3">
+              <Text className="text-purple-400 text-center font-medium">
+                {locating ? "Finding location..." : "Use approximate current location"}
+              </Text>
+            </Pressable>
             <TextInput value={description} onChangeText={setDescription} multiline textAlignVertical="top" placeholder="Tell musicians about the band" placeholderTextColor="#6b7280" className="h-28 px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-3" />
             <Pressable onPress={handleCreateBand} disabled={creating} className={`py-4 rounded-xl ${creating ? "bg-purple-900" : "bg-purple-600"}`}>
               <Text className="text-white text-center font-semibold">{creating ? "Creating..." : "Create band account"}</Text>

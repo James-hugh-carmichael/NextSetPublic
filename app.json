@@ -38,7 +38,13 @@
       "expo-font",
       "expo-status-bar",
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "NextSet uses your approximate location to show nearby band opportunities."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -10,6 +10,8 @@ export type Band = {
   description: string | null;
   image_url: string | null;
   videos: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type BandMembership = {
@@ -39,6 +41,7 @@ export type BandRosterMember = {
   name: string;
   role: string | null;
   imageUrl: string | null;
+  age: number | null;
 };
 
 type MembershipQueryResult = {
@@ -62,7 +65,7 @@ function normalizeMembership(membership: MembershipQueryResult): BandMembership 
 export async function getMyBandMemberships(userId: string) {
   const { data, error } = await supabase
     .from("band_members")
-    .select("band_id, role, is_leader, Bands(id, name, genre, location, description, image_url, videos)")
+    .select("band_id, role, is_leader, Bands(id, name, genre, location, description, image_url, videos, latitude, longitude)")
     .eq("user_id", userId)
     .order("joined_at", { ascending: true });
 
@@ -120,7 +123,7 @@ export function useBand(bandId?: string) {
     setLoading(true);
     const { data, error: queryError } = await supabase
       .from("Bands")
-      .select("id, name, genre, location, description, image_url, videos")
+      .select("id, name, genre, location, description, image_url, videos, latitude, longitude")
       .eq("id", bandId)
       .maybeSingle();
 
@@ -189,6 +192,22 @@ export async function updateBand(input: {
 export async function deleteBand(bandId: string) {
   const { error } = await supabase.rpc("delete_band", {
     target_band_id: bandId,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function updateBandLocation(
+  bandId: string,
+  location: { area: string; latitude: number; longitude: number }
+) {
+  const { error } = await supabase.rpc("update_band_location", {
+    target_band_id: bandId,
+    band_area: location.area,
+    band_latitude: location.latitude,
+    band_longitude: location.longitude,
   });
 
   if (error) {
@@ -300,11 +319,13 @@ export async function getBandRosterMembers(bandId: string) {
     name: string;
     role: string | null;
     image_url: string | null;
+    age: number | null;
   }>).map((member) => ({
     id: member.id,
     name: member.name,
     role: member.role,
     imageUrl: member.image_url,
+    age: member.age,
   }));
 }
 
@@ -313,12 +334,14 @@ export async function addBandRosterMember(input: {
   name: string;
   role: string;
   imageUrl: string | null;
+  age: number | null;
 }) {
   const { error } = await supabase.rpc("add_band_roster_member", {
     target_band_id: input.bandId,
     roster_name: input.name,
     roster_role: input.role.trim() || null,
     roster_image_url: input.imageUrl,
+    roster_age: input.age,
   });
 
   if (error) {
@@ -331,12 +354,14 @@ export async function updateBandRosterMember(input: {
   name: string;
   role: string;
   imageUrl: string | null;
+  age: number | null;
 }) {
   const { error } = await supabase.rpc("update_band_roster_member", {
     target_roster_member_id: input.id,
     roster_name: input.name,
     roster_role: input.role.trim() || null,
     roster_image_url: input.imageUrl,
+    roster_age: input.age,
   });
 
   if (error) {
@@ -360,6 +385,9 @@ export async function createBandPost(input: {
   description: string;
   rolesNeeded: string[];
   commitmentLevel: string;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
 }) {
   const { data, error } = await supabase.rpc("create_band_post", {
     target_band_id: input.bandId,
@@ -369,6 +397,9 @@ export async function createBandPost(input: {
     post_commitment_level: input.commitmentLevel || null,
     post_min_age: null,
     post_max_age: null,
+    post_location: input.location || null,
+    post_latitude: input.latitude,
+    post_longitude: input.longitude,
   });
 
   if (error) {
@@ -385,6 +416,9 @@ export async function updateBandPost(input: {
   rolesNeeded: string[];
   commitmentLevel: string;
   isOpen: boolean;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
 }) {
   const { error } = await supabase.rpc("update_band_post", {
     target_post_id: input.postId,
@@ -393,6 +427,19 @@ export async function updateBandPost(input: {
     post_roles_needed: JSON.stringify(input.rolesNeeded),
     post_commitment_level: input.commitmentLevel || null,
     post_is_open: input.isOpen,
+    post_location: input.location || null,
+    post_latitude: input.latitude,
+    post_longitude: input.longitude,
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deleteBandPost(postId: string) {
+  const { error } = await supabase.rpc("delete_band_post", {
+    target_post_id: postId,
   });
 
   if (error) {

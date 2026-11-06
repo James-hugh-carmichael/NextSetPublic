@@ -17,6 +17,7 @@ import {
   parseStoredList,
   parseStoredVideos,
   ProfileVideo as StoredProfileVideo,
+  getAgeFromBirthDate,
   useMusician,
 } from "../../services/musicians";
 
@@ -184,8 +185,10 @@ function BandAccountProfile({
                       </View>
                     )}
                     <View className="p-5">
-                      <Text className="text-2xl font-bold text-white">{member.name}</Text>
-                      <Text className="text-pink-400 mt-1">{member.role ?? "Band member"}</Text>
+                      <Text className="text-2xl font-bold text-white">
+                        {member.name}{member.age !== null ? `, ${member.age}` : ""}
+                      </Text>
+                      <Text className="text-white mt-1">{member.role ?? "Band member"}</Text>
                     </View>
                   </View>
                 ))}
@@ -270,6 +273,7 @@ export default function Profile() {
   const genres = parseStoredList(musician.genres);
   const roles = parseStoredList(musician.roles);
   const videos = parseStoredVideos(musician.videos);
+  const age = getAgeFromBirthDate(musician.Age);
   const initial = musician.name?.trim().charAt(0).toUpperCase() || "?";
 
   return (
@@ -290,7 +294,9 @@ export default function Profile() {
           <Settings size={20} color="white" />
         </Pressable>
         <View className="absolute bottom-0 left-0 right-0 px-6 py-6">
-          <Text className="text-4xl font-bold text-white mb-3">{musician.name ?? "Musician"}</Text>
+          <Text className="text-4xl font-bold text-white mb-3">
+            {musician.name ?? "Musician"}{age !== null ? `, ${age}` : ""}
+          </Text>
           <View className="flex-row flex-wrap gap-2">
             <View className="px-3 py-1 bg-purple-600 rounded-full">
               <Text className="text-white text-xs font-medium">

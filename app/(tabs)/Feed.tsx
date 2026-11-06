@@ -1,27 +1,52 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { Filter, MapPin, Users } from "lucide-react-native";
 
 import { BandPost, getOpenBandPosts, parseRoles } from "../../services/bandPosts";
+import {
+  EMPTY_OPPORTUNITY_FILTERS,
+  OpportunityFilters,
+  getOpportunityFilters,
+  matchesOpportunityFilters,
+} from "../../services/opportunityFilters";
+import { useUser } from "../../services/auth";
+import { getSavedUserLocation } from "../../services/location";
 
 export default function Feed() {
   const router = useRouter();
+  const { user } = useUser();
   const [posts, setPosts] = useState<BandPost[]>([]);
+  const [filters, setFilters] = useState<OpportunityFilters>(EMPTY_OPPORTUNITY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
-      setPosts(await getOpenBandPosts());
+      const [opportunities, savedFilters, savedLocation] = await Promise.all([
+        getOpenBandPosts(),
+        getOpportunityFilters(user?.id),
+        getSavedUserLocation(user?.id),
+      ]);
+      setPosts(opportunities);
+      setFilters(
+        savedFilters.latitude === null && savedLocation
+          ? {
+              ...savedFilters,
+              latitude: savedLocation.latitude,
+              longitude: savedLocation.longitude,
+              locationArea: savedLocation.area,
+            }
+          : savedFilters
+      );
       setError(null);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Unable to load opportunities.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     loadPosts();
@@ -31,6 +56,11 @@ export default function Feed() {
     useCallback(() => {
       loadPosts();
     }, [loadPosts])
+  );
+
+  const filteredPosts = useMemo(
+    () => posts.filter((post) => matchesOpportunityFilters(post, filters)),
+    [posts, filters]
   );
 
   return (
@@ -50,10 +80,14 @@ export default function Feed() {
       <View className="px-4 pb-6">
         {loading && <Text className="text-center text-gray-400 py-8">Loading opportunities...</Text>}
         {error && <Text className="text-center text-red-400 py-8">{error}</Text>}
-        {!loading && !error && posts.length === 0 && (
-          <Text className="text-center text-gray-400 py-8">There are no open band opportunities yet.</Text>
+        {!loading && !error && filteredPosts.length === 0 && (
+          <Text className="text-center text-gray-400 py-8">
+            {posts.length === 0
+              ? "There are no open band opportunities yet."
+              : "No opportunities match your filters."}
+          </Text>
         )}
-        {posts.map((post) => {
+        {filteredPosts.map((post) => {
           const band = post.band;
           const roles = parseRoles(post.roles_needed);
 
@@ -75,10 +109,10 @@ export default function Feed() {
                           <Text className="text-white text-xs font-medium">{band.genre}</Text>
                         </View>
                       )}
-                      {band.location && (
+                      {(post.location ?? band.location) && (
                         <View className="flex-row items-center gap-1">
                           <MapPin size={12} color="#ccc" />
-                          <Text className="text-gray-300 text-xs">{band.location}</Text>
+                          <Text className="text-gray-300 text-xs">{post.location ?? band.location}</Text>
                         </View>
                       )}
                     </View>

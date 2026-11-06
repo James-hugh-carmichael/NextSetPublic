@@ -1,10 +1,31 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
-import { ArrowLeft, MapPin, UserPlus } from "lucide-react-native";
+import { Alert, Image, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { ArrowLeft, MapPin, UserPlus, X } from "lucide-react-native";
 
 import { useUser } from "../services/auth";
+import { getBandRosterMembers, BandRosterMember } from "../services/bands";
 import { BandPost, getBandPost, parseRoles, requestToJoin } from "../services/bandPosts";
+import { parseStoredVideos, ProfileVideo } from "../services/musicians";
+
+function FullscreenVideo({ source, onClose }: { source: string; onClose: () => void }) {
+  const player = useVideoPlayer(source, (videoPlayer) => {
+    videoPlayer.loop = false;
+    videoPlayer.play();
+  });
+
+  return (
+    <Modal visible animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+      <View className="flex-1 bg-black">
+        <VideoView player={player} nativeControls contentFit="contain" style={{ flex: 1 }} />
+        <Pressable onPress={onClose} className="absolute top-12 right-5 p-3 rounded-full bg-black/60">
+          <X size={24} color="white" />
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
 
 export default function BandDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,6 +36,8 @@ export default function BandDetail() {
   const [error, setError] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  const [rosterMembers, setRosterMembers] = useState<BandRosterMember[]>([]);
+  const [activeVideo, setActiveVideo] = useState<ProfileVideo | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -35,6 +58,19 @@ export default function BandDetail() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!post?.band_id) {
+      setRosterMembers([]);
+      return;
+    }
+
+    getBandRosterMembers(post.band_id)
+      .then(setRosterMembers)
+      .catch(() => {
+        setRosterMembers([]);
+      });
+  }, [post?.band_id]);
 
   const handleRequest = async () => {
     if (!user || !post) {
@@ -69,6 +105,8 @@ export default function BandDetail() {
 
   const band = post.band;
   const roles = parseRoles(post.roles_needed);
+  const opportunityLocation = post.location ?? band?.location;
+  const videos = parseStoredVideos(band?.videos ?? null);
 
   return (
     <ScrollView className="flex-1 bg-[#0a0a0a]" showsVerticalScrollIndicator={false}>
@@ -95,13 +133,91 @@ export default function BandDetail() {
               <Text className="text-white font-medium">{band.genre}</Text>
             </View>
           )}
-          {band?.location && (
+          {opportunityLocation && (
             <View className="flex-row items-center gap-1">
               <MapPin size={14} color="#ccc" />
-              <Text className="text-gray-300 text-sm">{band.location}</Text>
+              <Text className="text-gray-300 text-sm">Gig location: {opportunityLocation}</Text>
             </View>
           )}
         </View>
+
+        <View className="mb-6">
+          <Text className="text-xl font-bold text-white mb-3">What the band is looking for</Text>
+          {post.description ? (
+            <Text className="text-gray-400 leading-relaxed mb-4">{post.description}</Text>
+          ) : (
+            <Text className="text-gray-400 mb-4">The band has not added a description yet.</Text>
+          )}
+          {roles.length === 0 ? (
+            <Text className="text-gray-400">The band has not listed roles yet.</Text>
+          ) : (
+            <View className="flex-row flex-wrap gap-2">
+              {roles.map((role) => (
+                <View key={role} className="px-3 py-2 bg-pink-600/20 border border-pink-500/30 rounded-full">
+                  <Text className="text-pink-400 font-medium">{role}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {post.commitment_level && (
+            <Text className="text-gray-400 mt-4">{post.commitment_level} commitment</Text>
+          )}
+        </View>
+
+        {band?.description && (
+          <View className="mb-6">
+            <Text className="text-xl font-bold text-white mb-3">About the band</Text>
+            <Text className="text-gray-400 leading-relaxed">{band.description}</Text>
+          </View>
+        )}
+
+        <View className="mb-6">
+          <Text className="text-xl font-bold text-white mb-3">Performance videos</Text>
+          {videos.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {videos.map((video, index) => (
+                <Pressable key={video.url} onPress={() => setActiveVideo(video)} className="w-36 h-56 mr-3 rounded-2xl overflow-hidden bg-[#1a1a1a]">
+                  {video.thumbnailUrl ? (
+                    <Image source={{ uri: video.thumbnailUrl }} className="w-full h-full" />
+                  ) : (
+                    <View className="w-full h-full items-center justify-center">
+                      <Text className="text-gray-500 text-xs text-center px-2">Performance video {index + 1}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text className="text-gray-400">This band has not added performance videos yet.</Text>
+          )}
+        </View>
+
+        {rosterMembers.length > 0 && (
+          <View className="mb-6">
+            <Text className="text-xl font-bold text-white mb-3">Meet the band</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {rosterMembers.map((member) => (
+                <View key={member.id} className="w-28 mr-3">
+                  {member.imageUrl ? (
+                    <Image source={{ uri: member.imageUrl }} className="w-28 h-28 rounded-2xl mb-2" />
+                  ) : (
+                    <View className="w-28 h-28 rounded-2xl mb-2 bg-pink-900 items-center justify-center">
+                      <Text className="text-4xl font-bold text-pink-200">
+                        {member.name.trim().charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+                  <Text className="text-white font-medium" numberOfLines={1}>
+                    {member.name}{member.age !== null ? `, ${member.age}` : ""}
+                  </Text>
+                  <Text className="text-white text-sm" numberOfLines={1}>
+                    {member.role ?? "Band member"}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <Pressable
           onPress={handleRequest}
@@ -116,39 +232,10 @@ export default function BandDetail() {
           </Text>
         </Pressable>
 
-        {post.description && (
-          <View className="mb-6">
-            <Text className="text-xl font-bold text-white mb-3">About this opportunity</Text>
-            <Text className="text-gray-400 leading-relaxed">{post.description}</Text>
-          </View>
-        )}
-        {band?.description && (
-          <View className="mb-6">
-            <Text className="text-xl font-bold text-white mb-3">About the band</Text>
-            <Text className="text-gray-400 leading-relaxed">{band.description}</Text>
-          </View>
-        )}
-        <View className="mb-6">
-          <Text className="text-xl font-bold text-white mb-3">Roles needed</Text>
-          {roles.length === 0 ? (
-            <Text className="text-gray-400">The band has not listed roles yet.</Text>
-          ) : (
-            <View className="flex-row flex-wrap gap-2">
-              {roles.map((role) => (
-                <View key={role} className="px-3 py-2 bg-pink-600/20 border border-pink-500/30 rounded-full">
-                  <Text className="text-pink-400 font-medium">{role}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-        {post.commitment_level && (
-          <View>
-            <Text className="text-xl font-bold text-white mb-2">Commitment</Text>
-            <Text className="text-gray-400">{post.commitment_level}</Text>
-          </View>
-        )}
       </View>
+      {activeVideo && (
+        <FullscreenVideo source={activeVideo.url} onClose={() => setActiveVideo(null)} />
+      )}
     </ScrollView>
   );
 }

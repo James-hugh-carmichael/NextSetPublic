@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "5.2.1",
     "@react-native-picker/picker": "2.11.4",
     "@supabase/supabase-js": "^2.108.2",
     "babel-preset-expo": "~58.0.0",
@@ -16,6 +17,7 @@
     "expo-font": "~58.0.11",
     "expo-image-picker": "~58.0.10",
     "expo-linking": "~58.0.16",
+    "expo-location": "~58.0.20",
     "expo-router": "^58.0.30",
     "expo-splash-screen": "^58.0.13",
     "expo-status-bar": "~58.0.4",

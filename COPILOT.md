@@ -40,7 +40,7 @@ and `bandPosts`.
 | `avatar_url` | `text` | Profile image URL. |
 | `tier` | `text` | Account tier. |
 | `Location` | user-defined | Location field; inspect its Supabase type before writing a client query. |
-| `Age` | `date` | Existing age/date field. |
+| `Age` | `date` | Musician date of birth; display age is calculated client-side. |
 | `Gender` | `text` | Existing gender field. |
 | `onboarding_complete` | `boolean` | Defaults to `false`; set to `true` only after a valid profile is saved. |
 | `created_at`, `updated_at` | `timestamptz` | Record timestamps. |
@@ -75,7 +75,8 @@ with `is_leader = true`.
 Created by `supabase/migrations/20261105173000_add_band_roster_members.sql`.
 This is a visual-only roster for bandmates who do not use NextSet. It is
 separate from `band_members`, grants no account access, and is managed only by
-band leaders.
+band leaders. It is visible to signed-in users viewing the band's recruitment
+posts.
 
 | Column | Type |
 |---|---|
@@ -83,7 +84,16 @@ band leaders.
 | `band_id` | `uuid`, references `Bands.id` |
 | `name` | required `text` |
 | `role`, `image_url` | nullable `text` |
+| `age` | nullable integer, limited to 0–120 |
 | `created_at`, `updated_at` | `timestamptz` |
+
+### Approximate locations
+
+`supabase/migrations/20261106112000_add_approximate_locations.sql` adds
+rounded latitude/longitude coordinates to `Bands` and a private
+`user_locations` table. Device coordinates are rounded to two decimal places
+before saving. Users can only read/write their own location; band leaders set
+their band's approximate area through `update_band_location`.
 
 ### `band_join_requests`
 
@@ -110,6 +120,8 @@ Band recruitment opportunities shown in the musician feed.
 | `id` | `uuid`, primary key |
 | `band_id` | `uuid`, references `Bands.id` |
 | `title`, `description`, `roles_needed`, `commitment_level` | `text` |
+| `location` | nullable `text`; optional gig/tour location, otherwise use the band's location |
+| `latitude`, `longitude` | nullable numeric; approximate gig/tour coordinates, otherwise use the band's coordinates |
 | `created_by` | `uuid`, nullable, references the creating band member |
 | `is_open` | `boolean` |
 | `min_age`, `max_age` | `bigint` |
@@ -190,6 +202,14 @@ A musician's application to a band post.
   `get_band_roster_members`, `add_band_roster_member`,
   `update_band_roster_member`, and `remove_band_roster_member`. They must
   never be treated as authenticated members.
+- Opportunity filters are persisted in AsyncStorage per user and applied only
+  by `app/(tabs)/Feed.tsx`. `app/(tabs)/Search.tsx` is a filter form and must
+  not render opportunity cards. Radius matching requires both the user's
+  saved approximate coordinates and an opportunity's approximate coordinates.
+  A post's gig/tour location and coordinates override its band's home location
+  for card/detail display and distance matching. The filter supports 1–100
+  km; its `100 km+` position includes all coordinate-enabled bands. Location
+  names are geocoded into the same approximate-coordinate filter.
 - `services/activeAccount.ts` persists the selected musician or confirmed band
   account locally. A band is eligible to become active only after a
   `band_members` row exists.
@@ -202,7 +222,7 @@ A musician's application to a band post.
 | `app/(tabs)/Profile.tsx` | Read current musician or band profile; band roster is visual-only. |
 | `app/(tabs)/Feed.tsx` | Open `bandPosts` for musician and band collaborator accounts. |
 | `app/(tabs)/Search.tsx` | Filter open `bandPosts` and `Bands` for all account modes. |
-| `app/BandDetail.tsx` | Apply to an open post through the signed-in musician profile. |
+| `app/BandDetail.tsx` | Preview a band's visual roster/videos and apply to an open post. |
 | `app/Bands.tsx` | Create bands, join with a private invite, and switch active accounts. |
 | `app/JoinBand.tsx` | Redeem a private band invite code. |
 | `app/BandPosts.tsx` | List and create the active band's recruitment posts. |

@@ -23,12 +23,14 @@ import {
   getBandRosterMembers,
   removeBandRosterMember,
   updateBand,
+  updateBandLocation,
   updateBandRosterMember,
   useBand,
   useBandMemberships,
 } from "../services/bands";
 import { MUSIC_GENRES, normalizeGenre } from "../lib/music";
 import { uploadProfileMedia } from "../services/media";
+import { getApproximateCurrentLocation } from "../services/location";
 import { parseStoredVideos, ProfileVideo } from "../services/musicians";
 
 export default function BandSetup() {
@@ -43,6 +45,7 @@ export default function BandSetup() {
   const [genre, setGenre] = useState("");
   const [genreQuery, setGenreQuery] = useState("");
   const [location, setLocation] = useState("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [videos, setVideos] = useState<ProfileVideo[]>([]);
@@ -54,9 +57,11 @@ export default function BandSetup() {
   const [editingRosterMember, setEditingRosterMember] = useState<BandRosterMember | null>(null);
   const [rosterName, setRosterName] = useState("");
   const [rosterRole, setRosterRole] = useState("");
+  const [rosterAge, setRosterAge] = useState("");
   const [rosterImageUrl, setRosterImageUrl] = useState<string | null>(null);
   const [savingRoster, setSavingRoster] = useState(false);
   const [uploadingRosterImage, setUploadingRosterImage] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (!band) {
@@ -66,6 +71,11 @@ export default function BandSetup() {
     setName(band.name ?? "");
     setGenre(band.genre ?? "");
     setLocation(band.location ?? "");
+    setCoordinates(
+      band.latitude !== null && band.longitude !== null
+        ? { latitude: band.latitude, longitude: band.longitude }
+        : null
+    );
     setDescription(band.description ?? "");
     setImageUrl(band.image_url);
     setVideos(parseStoredVideos(band.videos));
@@ -184,10 +194,32 @@ export default function BandSetup() {
     }
   };
 
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    try {
+      const currentLocation = await getApproximateCurrentLocation();
+      setLocation(currentLocation.area);
+      setCoordinates({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      });
+    } catch (locationError) {
+      Alert.alert(
+        "Unable to use location",
+        locationError instanceof Error
+          ? locationError.message
+          : "The band location could not be retrieved."
+      );
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const resetRosterForm = () => {
     setEditingRosterMember(null);
     setRosterName("");
     setRosterRole("");
+    setRosterAge("");
     setRosterImageUrl(null);
     setShowRosterForm(false);
   };
@@ -196,6 +228,7 @@ export default function BandSetup() {
     setEditingRosterMember(member);
     setRosterName(member.name);
     setRosterRole(member.role ?? "");
+    setRosterAge(member.age?.toString() ?? "");
     setRosterImageUrl(member.imageUrl);
     setShowRosterForm(true);
   };
@@ -229,8 +262,9 @@ export default function BandSetup() {
   };
 
   const saveRosterMember = async () => {
-    if (!bandId || !rosterName.trim()) {
-      Alert.alert("Name required", "Add your bandmate's name.");
+    const age = rosterAge.trim() ? Number(rosterAge) : null;
+    if (!bandId || !rosterName.trim() || (age !== null && (!Number.isInteger(age) || age < 0 || age > 120))) {
+      Alert.alert("Complete member details", "Add a name and a valid age between 0 and 120.");
       return;
     }
 
@@ -242,6 +276,7 @@ export default function BandSetup() {
           name: rosterName,
           role: rosterRole,
           imageUrl: rosterImageUrl,
+          age,
         });
       } else {
         await addBandRosterMember({
@@ -249,6 +284,7 @@ export default function BandSetup() {
           name: rosterName,
           role: rosterRole,
           imageUrl: rosterImageUrl,
+          age,
         });
       }
       resetRosterForm();
@@ -305,6 +341,13 @@ export default function BandSetup() {
         imageUrl,
         videos,
       });
+      if (coordinates) {
+        await updateBandLocation(bandId, {
+          area: location,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+        });
+      }
       router.back();
     } catch (saveError) {
       const message =
@@ -393,6 +436,11 @@ export default function BandSetup() {
         )}
         {genre && <Text className="text-purple-400 mb-3">Selected genre: {genre}</Text>}
         <TextInput value={location} onChangeText={setLocation} placeholder="City or area" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-3" />
+        <Pressable onPress={useCurrentLocation} disabled={locating} className="py-3 border border-[#2a2a2a] rounded-xl mb-3">
+          <Text className="text-purple-400 text-center font-medium">
+            {locating ? "Finding location..." : "Use approximate current location"}
+          </Text>
+        </Pressable>
         <TextInput value={description} onChangeText={setDescription} multiline textAlignVertical="top" placeholder="Tell musicians about the band" placeholderTextColor="#6b7280" className="h-28 px-4 py-3 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-white mb-6" />
 
         <View className="mb-8">
@@ -423,6 +471,7 @@ export default function BandSetup() {
                 {uploadingRosterImage ? "Uploading photo..." : "Tap to add a photo (optional)"}
               </Text>
               <TextInput value={rosterName} onChangeText={setRosterName} placeholder="Member name" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#101010] border border-[#2a2a2a] rounded-xl text-white mb-3" />
+              <TextInput value={rosterAge} onChangeText={setRosterAge} placeholder="Age" placeholderTextColor="#6b7280" keyboardType="number-pad" className="px-4 py-3 bg-[#101010] border border-[#2a2a2a] rounded-xl text-white mb-3" />
               <TextInput value={rosterRole} onChangeText={setRosterRole} placeholder="Instrument or role, e.g. Drummer" placeholderTextColor="#6b7280" className="px-4 py-3 bg-[#101010] border border-[#2a2a2a] rounded-xl text-white mb-3" />
               <Pressable onPress={saveRosterMember} disabled={savingRoster || uploadingRosterImage} className={`py-3 rounded-xl ${savingRoster ? "bg-purple-900" : "bg-purple-600"}`}>
                 <Text className="text-white text-center font-medium">
@@ -443,7 +492,7 @@ export default function BandSetup() {
               )}
               <View className="flex-1">
                 <Text className="text-white font-medium">{member.name}</Text>
-                <Text className="text-gray-400 text-sm">{member.role ?? "Band member"}</Text>
+                <Text className="text-white text-sm">{member.role ?? "Band member"}{member.age !== null ? ` · ${member.age}` : ""}</Text>
               </View>
               <Pressable onPress={() => editRosterMember(member)} className="p-2 mr-1">
                 <Pencil size={18} color="#a855f7" />

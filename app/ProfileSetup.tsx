@@ -20,6 +20,7 @@ import {
   parseStoredList,
   parseStoredVideos,
   ProfileVideo,
+  getAgeFromBirthDate,
   saveMusicianProfile,
   useMusician,
 } from "../services/musicians";
@@ -68,6 +69,7 @@ export default function ProfileSetup() {
   const { user } = useUser();
   const { musician, loading } = useMusician(user?.id);
   const [name, setName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [bio, setBio] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
   const [genreQuery, setGenreQuery] = useState("");
@@ -85,6 +87,7 @@ export default function ProfileSetup() {
     }
 
     setName(musician.name ?? "");
+    setBirthDate(musician.Age ?? "");
     setBio(musician.bio ?? "");
     setGenres(parseStoredList(musician.genres));
     setRoles(parseStoredList(musician.roles));
@@ -209,8 +212,8 @@ export default function ProfileSetup() {
       return;
     }
 
-    if (!name.trim() || !experience || !commitment) {
-      Alert.alert("Complete your profile", "Name, experience level, and commitment level are required.");
+    if (!name.trim() || !experience || !commitment || getAgeFromBirthDate(birthDate) === null) {
+      Alert.alert("Complete your profile", "Name, date of birth, experience level, and commitment level are required.");
       return;
     }
 
@@ -225,6 +228,7 @@ export default function ProfileSetup() {
         commitmentLevel: commitment,
         videos,
         avatarUrl,
+        birthDate,
       });
       router.replace("/(tabs)/Profile");
     } catch (error) {
@@ -268,6 +272,9 @@ export default function ProfileSetup() {
 
         <Text className="text-sm font-medium text-gray-300 mb-2">Name</Text>
         <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor="#6b7280" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white mb-4" />
+
+        <Text className="text-sm font-medium text-gray-300 mb-2">Date of birth</Text>
+        <TextInput value={birthDate} onChangeText={setBirthDate} placeholder="YYYY-MM-DD" placeholderTextColor="#6b7280" keyboardType="numbers-and-punctuation" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white mb-4" />
 
         <Text className="text-sm font-medium text-gray-300 mb-2">Bio</Text>
         <TextInput value={bio} onChangeText={setBio} multiline textAlignVertical="top" placeholder="Tell bands about yourself..." placeholderTextColor="#6b7280" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white h-32 mb-6" />
